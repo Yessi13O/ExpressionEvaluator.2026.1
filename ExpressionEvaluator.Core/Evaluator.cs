@@ -12,50 +12,54 @@ public class Evaluator
     {
         var postFix = string.Empty;
         var stack = new Stack<char>();
+        string row = string.Empty;
+
         foreach (var item in infix)
         {
             if (IsOperator(item))
             {
-                if (stack.Count == 0)
+                if (row != string.Empty)
+                {
+                    postFix += row + " ";
+                    row = "";
+                }
+
+                if (stack.Count == 0 || item == '(')
                 {
                     stack.Push(item);
                 }
+                else if (item == ')')
+                {
+                    while (stack.Peek() != '(')
+                    {
+                        postFix += stack.Pop() + " ";
+                    }
+                    stack.Pop();
+                }
                 else
                 {
-                    if (item == ')')
+                    while (stack.Count > 0 && stack.Peek() != '(' &&
+                           PriorityStack(stack.Peek()) >= PriorityInfix(item))
                     {
-                        do
-                        {
-                            postFix += stack.Pop();
-                        } while (stack.Peek() != '(');
-                        stack.Pop();
+                        postFix += stack.Pop() + " ";
                     }
-                    else
-                    {
-                        if (PriorityInfix(item) > PriorityStack(stack.Peek()))
-                        {
-                            stack.Push(item);
-                        }
-                        else
-                        {
-                            postFix += stack.Pop();
-                            stack.Push(item);
-                        }
-                    }
+                    stack.Push(item);
                 }
             }
             else
             {
-                postFix += item;
+                row += item;
             }
         }
-        while (stack.Count > 0)
-        {
-            postFix += stack.Pop();
-        }
-        return postFix;
-    }
 
+        if (row != string.Empty)
+            postFix += row + " ";
+
+        while (stack.Count > 0)
+            postFix += stack.Pop() + " ";
+
+        return postFix.Trim();
+    }
     private static int PriorityStack(char item) => item switch
     {
         '^' => 3,
@@ -81,13 +85,15 @@ public class Evaluator
     private static double EvaluatePostfix(string postfix)
     {
         var stack = new Stack<double>();
-        foreach (char item in postfix)
+        var row = postfix.Split(' ', StringSplitOptions.RemoveEmptyEntries);//modifique
+
+        foreach (var item in row)
         {
-            if (IsOperator(item))
+            if (item.Length == 1 && IsOperator(item[0]))
             {
                 var b = stack.Pop();
                 var a = stack.Pop();
-                stack.Push(item switch
+                stack.Push(item[0] switch
                 {
                     '+' => a + b,
                     '-' => a - b,
@@ -99,9 +105,11 @@ public class Evaluator
             }
             else
             {
-                stack.Push(double.Parse(item.ToString()));
+                stack.Push(double.Parse(item,
+                    System.Globalization.CultureInfo.InvariantCulture));
             }
         }
+
         return stack.Pop();
     }
 
