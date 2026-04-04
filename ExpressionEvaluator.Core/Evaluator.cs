@@ -12,16 +12,18 @@ public class Evaluator
     {
         var postFix = string.Empty;
         var stack = new Stack<char>();
-        string row = string.Empty;
+        var queue = new Queue<char>();
 
         foreach (var item in infix)
         {
             if (IsOperator(item))
             {
-                if (row != string.Empty)
+                if (queue.Count > 0)
                 {
-                    postFix += row + " ";
-                    row = "";
+                    var numero = string.Empty;
+                    while (queue.Count > 0)
+                        numero += queue.Dequeue();
+                    postFix += numero + " ";
                 }
 
                 if (stack.Count == 0 || item == '(')
@@ -48,12 +50,17 @@ public class Evaluator
             }
             else
             {
-                row += item;
+                queue.Enqueue(item);
             }
         }
 
-        if (row != string.Empty)
-            postFix += row + " ";
+        if (queue.Count > 0)
+        {
+            var numero = string.Empty;
+            while (queue.Count > 0)
+                numero += queue.Dequeue();
+            postFix += numero + " ";
+        }
 
         while (stack.Count > 0)
             postFix += stack.Pop() + " ";
@@ -85,10 +92,13 @@ public class Evaluator
     private static double EvaluatePostfix(string postfix)
     {
         var stack = new Stack<double>();
-        var row = postfix.Split(' ', StringSplitOptions.RemoveEmptyEntries);//modifique
+        var queue = new Queue<string>(
+            postfix.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-        foreach (var item in row)
+        while (queue.Count > 0)
         {
+            var item = queue.Dequeue();
+
             if (item.Length == 1 && IsOperator(item[0]))
             {
                 var b = stack.Pop();
