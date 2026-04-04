@@ -3,6 +3,7 @@
 public class Evaluator
 {
     public static double Evaluate(string infix)
+
     {
         var postfix = InfixToPostfix(infix);
         return EvaluatePostfix(postfix);
